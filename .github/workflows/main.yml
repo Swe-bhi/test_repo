@@ -29,7 +29,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           Invoke-WebRequest -Uri https://releases.hashicorp.com/terraform/1.0.11/terraform_1.0.11_windows_amd64.zip -OutFile terraform.zip
           Expand-Archive -Path terraform.zip -DestinationPath $env:TEMP\terraform
-          Copy-Item -Path $env:TEMP\terraform\terraform.exe -DestinationPath C:\Windows\System32\
+          Copy-Item -Path $env:TEMP\terraform\terraform.exe -Destination C:\Windows\System32\
         shell: pwsh
 
       - name: Terraform Init
