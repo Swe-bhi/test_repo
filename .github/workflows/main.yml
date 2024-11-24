@@ -6,7 +6,7 @@ on:
 
 jobs:
   create_vm:
-    runs-on: windows-latest  # Use windows-latest to ensure compatibility with PowerShell
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
