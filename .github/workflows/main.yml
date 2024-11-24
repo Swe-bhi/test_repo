@@ -27,17 +27,22 @@ jobs:
       - name: Install Terraform
         run: |
           $ErrorActionPreference = 'Stop'
+          Write-Host "Downloading Terraform..."
           Invoke-WebRequest -Uri https://releases.hashicorp.com/terraform/1.0.11/terraform_1.0.11_windows_amd64.zip -OutFile terraform.zip
+          Write-Host "Extracting Terraform..."
           Expand-Archive -Path terraform.zip -DestinationPath $env:TEMP\terraform
+          Write-Host "Copying Terraform to System32..."
           Copy-Item -Path $env:TEMP\terraform\terraform.exe -Destination C:\Windows\System32\
         shell: pwsh
 
       - name: Terraform Init
-        run: terraform init
+        run: |
+          terraform init
         shell: pwsh
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: |
+          terraform apply -auto-approve
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
