@@ -6,7 +6,7 @@ on:
 
 jobs:
   create_vm:
-    runs-on: ubuntu-latest  # Switch to ubuntu-latest to avoid Windows PowerShell issues
+    runs-on: windows-latest  # Use windows-latest to ensure compatibility with PowerShell
 
     steps:
       - name: Checkout repository
@@ -14,10 +14,10 @@ jobs:
 
       - name: Verify Environment Variables
         run: |
-          echo "ARM_CLIENT_ID: $ARM_CLIENT_ID"
-          echo "ARM_CLIENT_SECRET: $ARM_CLIENT_SECRET"
-          echo "ARM_SUBSCRIPTION_ID: $ARM_SUBSCRIPTION_ID"
-          echo "ARM_TENANT_ID: $ARM_TENANT_ID"
+          echo "ARM_CLIENT_ID: $env:ARM_CLIENT_ID"
+          echo "ARM_CLIENT_SECRET: $env:ARM_CLIENT_SECRET"
+          echo "ARM_SUBSCRIPTION_ID: $env:ARM_SUBSCRIPTION_ID"
+          echo "ARM_TENANT_ID: $env:ARM_TENANT_ID"
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
@@ -26,14 +26,15 @@ jobs:
 
       - name: Install Terraform
         run: |
-          sudo apt-get update && sudo apt-get install -y wget unzip
-          wget https://releases.hashicorp.com/terraform/1.0.11/terraform_1.0.11_linux_amd64.zip
-          unzip terraform_1.0.11_linux_amd64.zip
-          sudo mv terraform /usr/local/bin/
-        shell: bash
+          $ErrorActionPreference = 'Stop'
+          Invoke-WebRequest -Uri https://releases.hashicorp.com/terraform/1.0.11/terraform_1.0.11_windows_amd64.zip -OutFile terraform.zip
+          Expand-Archive -Path terraform.zip -DestinationPath $env:TEMP\terraform
+          Copy-Item -Path $env:TEMP\terraform\terraform.exe -DestinationPath C:\Windows\System32\
+        shell: pwsh
 
       - name: Terraform Init
         run: terraform init
+        shell: pwsh
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
@@ -42,4 +43,5 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        shell: pwsh
 
