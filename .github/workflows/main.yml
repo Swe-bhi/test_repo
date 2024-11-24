@@ -1,4 +1,4 @@
-name: VM Creation Workflow
+echo 'name: VM Creation Workflow
 
 on:
   repository_dispatch:
@@ -43,5 +43,5 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-        shell: pwsh
+        shell: pwsh' >> .github/workflows/main.yml
 
