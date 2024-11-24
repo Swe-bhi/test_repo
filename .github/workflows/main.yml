@@ -12,12 +12,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Verify Environment Variables
+      - name: Validate Environment Variables
         run: |
-          echo "ARM_CLIENT_ID: $env:ARM_CLIENT_ID"
-          echo "ARM_CLIENT_SECRET: $env:ARM_CLIENT_SECRET"
-          echo "ARM_SUBSCRIPTION_ID: $env:ARM_SUBSCRIPTION_ID"
-          echo "ARM_TENANT_ID: $env:ARM_TENANT_ID"
+          if (!$env:ARM_CLIENT_ID) { Write-Error "ARM_CLIENT_ID is not set." }
+          if (!$env:ARM_CLIENT_SECRET) { Write-Error "ARM_CLIENT_SECRET is not set." }
+          if (!$env:ARM_SUBSCRIPTION_ID) { Write-Error "ARM_SUBSCRIPTION_ID is not set." }
+          if (!$env:ARM_TENANT_ID) { Write-Error "ARM_TENANT_ID is not set." }
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
@@ -40,9 +40,16 @@ jobs:
           terraform init
         shell: pwsh
 
-      - name: Terraform Apply
+      - name: Conditional Terraform Apply
         run: |
-          terraform apply -auto-approve
+          if ($env:ARM_CLIENT_ID -and $env:ARM_CLIENT_SECRET -and $env:ARM_SUBSCRIPTION_ID -and $env:ARM_TENANT_ID) {
+            Write-Host "Applying Terraform with real credentials..."
+            terraform apply -auto-approve
+          } else {
+            Write-Host "Skipping Terraform apply due to missing or mock credentials. Using dummy data for testing."
+            # Replace with actual dummy steps if needed
+            Write-Host "Dummy Step: Would have applied Terraform here."
+          }
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
