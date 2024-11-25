@@ -33,7 +33,19 @@ jobs:
         nohup python mock_stripe_webhook.py &
 
     - name: Wait for scripts to start
-      run: sleep 20  # Increased sleep time to ensure the services are up
+      run: sleep 20  # Increased sleep time to ensure services are up
+
+    - name: Health check for mock_stripe
+      run: |
+        until curl http://localhost:5000/health; do echo waiting for mock_stripe; sleep 5; done
+
+    - name: Health check for mock_awsapi
+      run: |
+        until curl http://localhost:5001/health; do echo waiting for mock_awsapi; sleep 5; done
+
+    - name: Health check for mock_stripe_webhook
+      run: |
+        until curl http://localhost:5002/health; do echo waiting for mock_stripe_webhook; sleep 5; done
 
   process-payment:
     runs-on: ubuntu-latest
@@ -53,9 +65,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Trigger payment
+    - name: Trigger payment using curl
       run: |
-        python trigger_payment.py
+        curl -X POST -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${{ secrets.PA_TOKEN }}" -d '{"event_type":"payment_success"}' https://api.github.com/repos/Swe-bhi/test_repo/dispatches
 
   create_vm:
     runs-on: windows-latest
