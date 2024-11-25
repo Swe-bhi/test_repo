@@ -31,6 +31,10 @@ variable "tenant_id" {
   description = "The Tenant ID for Azure"
 }
 
+variable "ssh_public_key" {
+  description = "The SSH public key to access the virtual machine"
+}
+
 resource "azurerm_resource_group" "rg" {
   name     = "myResourceGroup"
   location = "West Europe"
@@ -78,14 +82,15 @@ resource "azurerm_virtual_machine" "vm" {
   os_profile {
     computer_name  = "Himitsu_VM"
     admin_username = "azureuser"
-    admin_password = "Password1234!"
+    # admin_password = "Password1234!"  # Removed password to use SSH key instead
+    custom_data = base64encode("echo 'Welcome to Himitsu_VM' > /etc/motd")
   }
 
   os_profile_linux_config {
-    disable_password_authentication = false
-    ssh_keys { 
-      path = "/home/azureuser/.ssh/authorized_keys" 
-      key_data = var.ssh_public_key 
+    disable_password_authentication = true
+    ssh_keys {
+      path     = "/home/azureuser/.ssh/authorized_keys"
+      key_data = var.ssh_public_key
     }
   }
 
