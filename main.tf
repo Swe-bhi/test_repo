@@ -41,21 +41,21 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_virtual_network" "vnet" {
-  name                = "himitsu_Vnet"
+  name                = "himitsuVnet"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 }
 
 resource "azurerm_subnet" "subnet" {
-  name                 = "himitsu_Subnet"
+  name                 = "himitsuSubnet"
   address_prefixes     = ["10.0.1.0/24"]
   virtual_network_name = azurerm_virtual_network.vnet.name
   resource_group_name  = azurerm_resource_group.rg.name
 }
 
 resource "azurerm_network_interface" "nic" {
-  name                = "himitsu_Nic"
+  name                = "himitsuNic"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
@@ -67,7 +67,7 @@ resource "azurerm_network_interface" "nic" {
 }
 
 resource "azurerm_virtual_machine" "vm" {
-  name                  = "Himitsu_VM"
+  name                  = "HimitsuVM"
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
   network_interface_ids = [azurerm_network_interface.nic.id]
@@ -80,9 +80,9 @@ resource "azurerm_virtual_machine" "vm" {
   }
 
   os_profile {
-    computer_name  = "Himitsu_VM"
+    computer_name  = "HimitsuVM"
     admin_username = "azureuser"
-    custom_data = base64encode("echo 'Welcome to Himitsu_VM' > /etc/motd")
+    custom_data = base64encode("echo 'Welcome to HimitsuVM' > /etc/motd")
   }
 
   os_profile_linux_config {
