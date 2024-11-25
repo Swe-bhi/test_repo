@@ -15,10 +15,21 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
-variable "client_id" {}
-variable "client_secret" {}
-variable "subscription_id" {}
-variable "tenant_id" {}
+variable "client_id" {
+  description = "The Client ID for Azure"
+}
+
+variable "client_secret" {
+  description = "The Client Secret for Azure"
+}
+
+variable "subscription_id" {
+  description = "The Subscription ID for Azure"
+}
+
+variable "tenant_id" {
+  description = "The Tenant ID for Azure"
+}
 
 resource "azurerm_resource_group" "rg" {
   name     = "myResourceGroup"

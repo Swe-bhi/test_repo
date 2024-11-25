@@ -44,7 +44,7 @@ jobs:
         run: |
           if ($env:ARM_CLIENT_ID -and $env:ARM_CLIENT_SECRET -and $env:ARM_SUBSCRIPTION_ID -and $env:ARM_TENANT_ID) {
             Write-Host "Applying Terraform with real credentials..."
-            terraform apply -auto-approve
+            terraform apply -auto-approve -var "client_id=$env:ARM_CLIENT_ID" -var "client_secret=$env:ARM_CLIENT_SECRET" -var "subscription_id=$env:ARM_SUBSCRIPTION_ID" -var "tenant_id=$env:ARM_TENANT_ID"
           } else {
             Write-Host "Skipping Terraform apply due to missing or mock credentials. Using dummy data for testing."
             # Replace with actual dummy steps if needed
