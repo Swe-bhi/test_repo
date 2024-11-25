@@ -83,6 +83,10 @@ resource "azurerm_virtual_machine" "vm" {
 
   os_profile_linux_config {
     disable_password_authentication = false
+    ssh_keys { 
+      path = "/home/azureuser/.ssh/authorized_keys" 
+      key_data = var.ssh_public_key 
+    }
   }
 
   storage_image_reference {
