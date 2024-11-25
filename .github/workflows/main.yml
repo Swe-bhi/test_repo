@@ -18,11 +18,13 @@ jobs:
           if (!$env:ARM_CLIENT_SECRET) { Write-Error "ARM_CLIENT_SECRET is not set." }
           if (!$env:ARM_SUBSCRIPTION_ID) { Write-Error "ARM_SUBSCRIPTION_ID is not set." }
           if (!$env:ARM_TENANT_ID) { Write-Error "ARM_TENANT_ID is not set." }
+          if (!$env:SSH_PUBLIC_KEY) { Write-Error "SSH_PUBLIC_KEY is not set." }
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
 
       - name: Install Terraform
         run: |
@@ -42,9 +44,9 @@ jobs:
 
       - name: Conditional Terraform Apply
         run: |
-          if ($env:ARM_CLIENT_ID -and $env:ARM_CLIENT_SECRET -and $env:ARM_SUBSCRIPTION_ID -and $env:ARM_TENANT_ID) {
+          if ($env:ARM_CLIENT_ID -and $env:ARM_CLIENT_SECRET -and $env:ARM_SUBSCRIPTION_ID -and $env:ARM_TENANT_ID -and $env:SSH_PUBLIC_KEY) {
             Write-Host "Applying Terraform with real credentials..."
-            terraform apply -auto-approve -var "client_id=$env:ARM_CLIENT_ID" -var "client_secret=$env:ARM_CLIENT_SECRET" -var "subscription_id=$env:ARM_SUBSCRIPTION_ID" -var "tenant_id=$env:ARM_TENANT_ID"
+            terraform apply -auto-approve -var "client_id=$env:ARM_CLIENT_ID" -var "client_secret=$env:ARM_CLIENT_SECRET" -var "subscription_id=$env:ARM_SUBSCRIPTION_ID" -var "tenant_id=$env:ARM_TENANT_ID" -var "ssh_public_key=$env:SSH_PUBLIC_KEY"
           } else {
             Write-Host "Skipping Terraform apply due to missing or mock credentials. Using dummy data for testing."
             # Replace with actual dummy steps if needed
@@ -55,5 +57,6 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
         shell: pwsh
 
