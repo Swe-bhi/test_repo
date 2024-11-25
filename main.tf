@@ -37,7 +37,7 @@ variable "ssh_public_key" {
 
 resource "azurerm_resource_group" "rg" {
   name     = "myResourceGroup"
-  location = "West Europe"
+  location = "North Europe"
 }
 
 resource "azurerm_virtual_network" "vnet" {
@@ -82,7 +82,6 @@ resource "azurerm_virtual_machine" "vm" {
   os_profile {
     computer_name  = "Himitsu_VM"
     admin_username = "azureuser"
-    # admin_password = "Password1234!"  # Removed password to use SSH key instead
     custom_data = base64encode("echo 'Welcome to Himitsu_VM' > /etc/motd")
   }
 
@@ -97,8 +96,9 @@ resource "azurerm_virtual_machine" "vm" {
   storage_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
-    sku       = "20.04-LTS"
+    sku       = "24.04-LTS"
     version   = "latest"
   }
 }
+
 
