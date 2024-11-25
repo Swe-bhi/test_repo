@@ -9,64 +9,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  create_vm:
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Validate Environment Variables
-        run: |
-          if (!$env:ARM_CLIENT_ID) { Write-Error "ARM_CLIENT_ID is not set." }
-          if (!$env:ARM_CLIENT_SECRET) { Write-Error "ARM_CLIENT_SECRET is not set." }
-          if (!$env:ARM_SUBSCRIPTION_ID) { Write-Error "ARM_SUBSCRIPTION_ID is not set." }
-          if (!$env:ARM_TENANT_ID) { Write-Error "ARM_TENANT_ID is not set." }
-          if (!$env:SSH_PUBLIC_KEY) { Write-Error "SSH_PUBLIC_KEY is not set." }
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
-
-      - name: Install Terraform
-        run: |
-          $ErrorActionPreference = 'Stop'
-          Write-Host "Downloading Terraform..."
-          Invoke-WebRequest -Uri https://releases.hashicorp.com/terraform/1.0.11/terraform_1.0.11_windows_amd64.zip -OutFile terraform.zip
-          Write-Host "Extracting Terraform..."
-          Expand-Archive -Path terraform.zip -DestinationPath $env:TEMP\terraform
-          Write-Host "Copying Terraform to System32..."
-          Copy-Item -Path $env:TEMP\terraform\terraform.exe -Destination C:\Windows\System32\
-        shell: pwsh
-
-      - name: Terraform Init
-        run: |
-          terraform init
-        shell: pwsh
-
-      - name: Conditional Terraform Apply
-        run: |
-          if ($env:ARM_CLIENT_ID -and $env:ARM_CLIENT_SECRET -and $env:ARM_SUBSCRIPTION_ID -and $env:ARM_TENANT_ID -and $env:SSH_PUBLIC_KEY) {
-            Write-Host "Applying Terraform with real credentials..."
-            terraform apply -auto-approve -var "client_id=$env:ARM_CLIENT_ID" -var "client_secret=$env:ARM_CLIENT_SECRET" -var "subscription_id=$env:ARM_SUBSCRIPTION_ID" -var "tenant_id=$env:ARM_TENANT_ID" -var "ssh_public_key=$env:SSH_PUBLIC_KEY"
-          } else {
-            Write-Host "Skipping Terraform apply due to missing or mock credentials. Using dummy data for testing."
-            # Replace with actual dummy steps if needed
-            Write-Host "Dummy Step: Would have applied Terraform here."
-          }
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
-        shell: pwsh
-
-  run-scripts-and-trigger:
+  run-mock-scripts:
     runs-on: ubuntu-latest
-    needs: create_vm
 
     steps:
     - name: Checkout repository
@@ -89,9 +33,83 @@ jobs:
         nohup python mock_stripe_webhook.py &
 
     - name: Wait for scripts to start
-      run: sleep 10
+      run: sleep 20  # Increased sleep time to ensure the services are up
+
+  process-payment:
+    runs-on: ubuntu-latest
+    needs: run-mock-scripts
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
     - name: Trigger payment
       run: |
         python trigger_payment.py
+
+  create_vm:
+    runs-on: windows-latest
+    needs: process-payment
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Validate Environment Variables
+      run: |
+        if (!$env:ARM_CLIENT_ID) { Write-Error "ARM_CLIENT_ID is not set." }
+        if (!$env:ARM_CLIENT_SECRET) { Write-Error "ARM_CLIENT_SECRET is not set." }
+        if (!$env:ARM_SUBSCRIPTION_ID) { Write-Error "ARM_SUBSCRIPTION_ID is not set." }
+        if (!$env:ARM_TENANT_ID) { Write-Error "ARM_TENANT_ID is not set." }
+        if (!$env:SSH_PUBLIC_KEY) { Write-Error "SSH_PUBLIC_KEY is not set." }
+      env:
+        ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+        ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+        ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+
+    - name: Install Terraform
+      run: |
+        $ErrorActionPreference = 'Stop'
+        Write-Host "Downloading Terraform..."
+        Invoke-WebRequest -Uri https://releases.hashicorp.com/terraform/1.0.11/terraform_1.0.11_windows_amd64.zip -OutFile terraform.zip
+        Write-Host "Extracting Terraform..."
+        Expand-Archive -Path terraform.zip -DestinationPath $env:TEMP\terraform
+        Write-Host "Copying Terraform to System32..."
+        Copy-Item -Path $env:TEMP\terraform\terraform.exe -Destination C:\Windows\System32\
+      shell: pwsh
+
+    - name: Terraform Init
+      run: |
+        terraform init
+      shell: pwsh
+
+    - name: Conditional Terraform Apply
+      run: |
+        if ($env:ARM_CLIENT_ID -and $env:ARM_CLIENT_SECRET -and $env:ARM_SUBSCRIPTION_ID -and $env:ARM_TENANT_ID -and $env:SSH_PUBLIC_KEY) {
+          Write-Host "Applying Terraform with real credentials..."
+          terraform apply -auto-approve -var "client_id=$env:ARM_CLIENT_ID" -var "client_secret=$env:ARM_CLIENT_SECRET" -var "subscription_id=$env:ARM_SUBSCRIPTION_ID" -var "tenant_id=$env:ARM_TENANT_ID" -var "ssh_public_key=$env:SSH_PUBLIC_KEY"
+        } else {
+          Write-Host "Skipping Terraform apply due to missing or mock credentials. Using dummy data for testing."
+          # Replace with actual dummy steps if needed
+          Write-Host "Dummy Step: Would have applied Terraform here."
+        }
+      env:
+        ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+        ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+        ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+      shell: pwsh
 
